@@ -45,8 +45,8 @@ impl Iterator for WaveSynth {
         let mut synt = 0.0;
         for wave_elem in &self.waves {
             match wave_elem {
-                &WaveElement::Addative(wave) => synt += wave.next()?,
-                &WaveElement::Subtractive(wave) => synt += wave.next()?,
+                WaveElement::Addative(wave) => synt += wave.next()?,
+                WaveElement::Subtractive(wave) => synt += wave.next()?,
             }
         }
         Some(synt * self.volume)
