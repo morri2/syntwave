@@ -1,4 +1,7 @@
 pub mod wave;
+pub mod plugin;
+#[macro_use]
+extern crate vst;
 use wave::Wave;
 
 use rodio::{OutputStream, source::Source};

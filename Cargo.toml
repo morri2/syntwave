@@ -9,3 +9,4 @@ edition = "2018"
 
 [dependencies]
 rodio = "0.14.0"
+vst = "0.2.1"
