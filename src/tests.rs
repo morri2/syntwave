@@ -1,10 +1,6 @@
-pub mod wave;
-pub mod plugin;
-#[macro_use]
-extern crate vst;
 use wave::Wave;
-pub mod synth;
-use synth::Synth;
+
+use synth::WaveSynth;
 
 use rodio::{OutputStream, source::Source};
 

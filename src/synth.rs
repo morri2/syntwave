@@ -23,7 +23,7 @@ impl WaveSynth {
     }
 
     fn get_sound(&self, t: f32) -> f32 {
-        
+        return 0.0
     }
 
 }
