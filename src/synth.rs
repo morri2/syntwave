@@ -43,7 +43,7 @@ impl Iterator for WaveSynth {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
         let mut synt = 0.0;
-        for wave_elem in &self.waves {
+        for wave_elem in &mut self.waves {
             match wave_elem {
                 WaveElement::Addative(wave) => synt += wave.next()?,
                 WaveElement::Subtractive(wave) => synt += wave.next()?,
