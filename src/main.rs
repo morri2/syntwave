@@ -1,7 +1,7 @@
 pub mod wave;
 use wave::Wave;
 pub mod synth;
-use synth::Synth;
+use synth::WaveSynth;
 
 use rodio::{OutputStream, source::Source};
 

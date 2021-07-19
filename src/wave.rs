@@ -51,9 +51,8 @@ impl Iterator for Wave {
     fn next(&mut self) -> Option<Self::Item> {
         let t = (self.t as f32 )/(self.sample_frequency as f32);
         self.t += 1;
-        Some(self.amplitude * self.shape.get_base_sound(t * self.frequency) + self.amplitude)
+        Some(self.amplitude * self.shape.get_base_sound(t * self.frequency))
     }
-
 }
 
 impl Source for Wave {
@@ -61,7 +60,7 @@ impl Source for Wave {
     fn channels(&self) -> u16 {1}
     fn sample_rate(&self) -> u32 {self.sample_frequency}
     fn total_duration(&self) -> Option<Duration> {None}
-}    
+}
 
 pub enum WaveShape {
     Sine,
