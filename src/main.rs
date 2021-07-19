@@ -3,6 +3,8 @@ pub mod plugin;
 #[macro_use]
 extern crate vst;
 use wave::Wave;
+pub mod synth;
+use synth::Synth;
 
 use rodio::{OutputStream, source::Source};
 
@@ -11,7 +13,7 @@ fn main() {
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
 
-    let source = Wave::square(440.0,0.05);
+    let source = Wave::square(440.0,0.025);
 
     stream_handle.play_raw(source.convert_samples());
 

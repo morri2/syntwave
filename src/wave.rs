@@ -6,53 +6,52 @@ use core::time::Duration;
 
 pub struct Wave {
     amplitude: f32,
-    frequenzy: f32,
+    frequency: f32,
     shape: WaveShape,
-    sample_frequenzy: u32,
-    timestamp: u32,
+    sample_frequency: u32,
+    t: u32,
 }
 
 impl Wave {
 
-    pub fn sine(frequenzy: f32, amplitude: f32) -> Self{
+    pub fn sine(frequency: f32, amplitude: f32) -> Self{
         Self {
             amplitude,
-            frequenzy,
+            frequency,
             shape: WaveShape::Sine,
-            sample_frequenzy: 48000,
-            timestamp: 0,
+            sample_frequency: 48000,
+            t: 0,
         }
     }
 
-    pub fn square(frequenzy: f32, amplitude: f32) -> Self{
+    pub fn square(frequency: f32, amplitude: f32) -> Self{
         Self {
             amplitude,
-            frequenzy,
+            frequency,
             shape: WaveShape::Square,
-            sample_frequenzy: 48000,
-            timestamp: 0,
+            sample_frequency: 48000,
+            t: 0,
         }
     }
 
-    pub fn saw(frequenzy: f32, amplitude: f32) -> Self{
+    pub fn saw(frequency: f32, amplitude: f32) -> Self{
         Self {
             amplitude,
-            frequenzy,
+            frequency,
             shape: WaveShape::Saw,
-            sample_frequenzy: 48000,
-            timestamp: 0,
+            sample_frequency: 48000,
+            t: 0,
         }
     }
 
 }
 
-
 impl Iterator for Wave {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
-        let t = (self.timestamp as f32 )/(self.sample_frequenzy as f32);
-        self.timestamp += 1;
-        Some(self.amplitude * self.shape.get_base_sound(t * self.frequenzy) + self.amplitude)
+        let t = (self.t as f32 )/(self.sample_frequency as f32);
+        self.t += 1;
+        Some(self.amplitude * self.shape.get_base_sound(t * self.frequency) + self.amplitude)
     }
 
 }
@@ -60,7 +59,7 @@ impl Iterator for Wave {
 impl Source for Wave {
     fn current_frame_len(&self) -> Option<usize> {None}
     fn channels(&self) -> u16 {1}
-    fn sample_rate(&self) -> u32 {self.sample_frequenzy}
+    fn sample_rate(&self) -> u32 {self.sample_frequency}
     fn total_duration(&self) -> Option<Duration> {None}
 }    
 
