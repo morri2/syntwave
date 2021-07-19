@@ -1,9 +1,9 @@
-use wave::Wave;
-pub mod synth;
-use synth::WaveSynth;
+#[cfg(test)]
+use super::*;
 
 use rodio::{OutputStream, source::Source};
 
+#[test]
 fn main() {
     println!("Hello, music!");
 
