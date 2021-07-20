@@ -1,21 +1,26 @@
 use crate::wave::Wave;
 use core::time::Duration;
 use rodio::Source;
+use std::f32::consts::PI;
 
-pub struct SynthWave {
-    waves: Vec<WaveElement>,
+pub struct MonoWave {
+    wave: Wave,
+
+    //volume settings
     volume: f32,
     volume_cap: f32,
+
+    //sample/playback
     sample_frequency: u32,
     sample_dt: f32,
     sample_head: u32,
 }
 
-impl SynthWave {
-    pub fn new() -> Self {
+impl MonoWave {
+    pub fn new(wave: Wave) -> Self {
         let sample_frequency = 48000;
         Self {
-            waves: Vec::with_capacity(3),
+            wave,
 
             //volume settings
             volume: 1.0,
@@ -28,11 +33,7 @@ impl SynthWave {
         }
     }
 
-    pub fn waves(&self) -> usize {
-        self.waves.len()
-    }
-
-    // volume functions (could be refractord)
+    // Volume settings
     pub fn amplify_sample(&self, sample: f32) -> f32 {
         f32::min(
             f32::max(sample * self.volume, -self.volume_cap),
@@ -56,35 +57,12 @@ impl SynthWave {
         self.volume_cap = volume_cap
     }
 
-    pub fn push_addative_wave(&mut self, wave: Wave) {
-        self.waves.push(WaveElement::Addative(wave));
-    }
-
-    pub fn push_subtractive_wave(&mut self, wave: Wave) {
-        self.waves.push(WaveElement::Subtractive(wave));
-    }
-
     pub fn head_time(&self) -> f32 {
         self.sample_head as f32 * self.sample_dt
     }
 }
 
-impl Iterator for SynthWave {
-    type Item = f32;
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut synt = 0.0;
-        for wave_elem in &self.waves {
-            match wave_elem {
-                WaveElement::Addative(wave) => synt += wave.sample(self.head_time()),
-                WaveElement::Subtractive(wave) => synt -= wave.sample(self.head_time()),
-            }
-        }
-        self.sample_head += 1;
-        Some(self.amplify_sample(synt))
-    }
-}
-
-impl Source for SynthWave {
+impl Source for MonoWave {
     fn current_frame_len(&self) -> Option<usize> {
         None
     }
@@ -99,9 +77,11 @@ impl Source for SynthWave {
     }
 }
 
-pub enum WaveElement {
-    Addative(Wave),
-    Subtractive(Wave),
+impl Iterator for MonoWave {
+    type Item = f32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let sample = self.wave.sample(self.head_time());
+        self.sample_head += 1;
+        Some(self.amplify_sample(sample))
+    }
 }
-
-impl WaveElement {}
