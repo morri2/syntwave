@@ -1,4 +1,4 @@
-use crate::{synth::SynthWave, wave::Wave};
+use crate::{mono::MonoWave, synth::SynthWave, wave::Wave};
 use rand::random;
 use std::thread::current;
 use vst::{
@@ -9,7 +9,7 @@ use vst::{
 //#[derive(Default)]
 struct SyntWave {
     current_note: Option<u8>,
-    synth: SynthWave,
+    synth: SynthType,
     sample_rate: f32,
 }
 
@@ -18,9 +18,9 @@ impl Default for SyntWave {
         Self {
             current_note: None,
             synth: {
-                let mut synth = SynthWave::new();
+                let mut synth = MonoWave::new().with_sample_frequency(44100);
                 synth.push_addative_wave(Wave::sine(440.0, 0.1));
-                synth
+                SynthType::Mono(synth)
             },
             sample_rate: 44100.,
         }
@@ -106,6 +106,17 @@ impl Plugin for SyntWave {
             _ => Supported::Maybe,
         }
     }
+
+    fn set_sample_rate(&mut self, rate: f32) {
+        self.sample_rate = rate;
+        todo!()
+        //self.synth = self.synth.with_sample_frequency(rate as u32);
+    }
+}
+
+enum SynthType {
+    Mono(MonoWave),
+    Multi(SynthWave),
 }
 
 plugin_main!(SyntWave);
