@@ -1,4 +1,4 @@
-use crate::{mono::MonoWave, synth::SynthWave, wave::Wave};
+use crate::{mono::MonoWave, synth::CompoundWave, wave::Wave};
 use rand::random;
 use std::thread::current;
 use vst::{
@@ -134,7 +134,7 @@ impl Plugin for SyntWave {
 
 enum SynthType {
     Mono(MonoWave),
-    Multi(SynthWave),
+    Multi(CompoundWave),
 }
 impl SynthType {
     pub fn next_sample(&mut self) -> Option<f32> {
