@@ -6,6 +6,18 @@ use vst::{
     event::Event,
     plugin::{CanDo, Category, Info, Plugin},
 };
+
+/// Convert the midi note's pitch into the equivalent frequency.
+///
+/// This function assumes A4 is 440hz.
+fn midi_pitch_to_freq(pitch: u8) -> f32 {
+    const A4_PITCH: i8 = 69;
+    const A4_FREQ: f32 = 440.0;
+
+    // Midi notes can be 0-127
+    ((f32::from(pitch as i8 - A4_PITCH)) / 12.).exp2() * A4_FREQ
+}
+
 //#[derive(Default)]
 struct SyntWave {
     current_note: Option<u8>,
@@ -18,8 +30,7 @@ impl Default for SyntWave {
         Self {
             current_note: None,
             synth: {
-                let mut synth = MonoWave::new().with_sample_frequency(44100);
-                synth.push_addative_wave(Wave::sine(440.0, 0.1));
+                let mut synth = MonoWave::new(Wave::saw(440.0, 0.1)).with_sample_frequency(44100);
                 SynthType::Mono(synth)
             },
             sample_rate: 44100.,
@@ -80,11 +91,12 @@ impl Plugin for SyntWave {
         // We only want to process *anything* if a note is
         // being held.  Else, we can return early and skip
         // processing anything!
+        let (_, mut output_buffer) = buffer.split();
         if let Some(pitch) = self.current_note {
+            self.synth.set_frequency(midi_pitch_to_freq(pitch));
             // `buffer.split()` gives us a tuple containing the
             // input and output buffers.  We only care about the
             // output, so we can ignore the input by using `_`.
-            let (_, mut output_buffer) = buffer.split();
 
             // Now, we want to loop over our output channels.  This
             // includes our left and right channels (or more, if you
@@ -92,9 +104,16 @@ impl Plugin for SyntWave {
             for output_channel in output_buffer.into_iter() {
                 // Let's iterate over every sample in our channel.
                 for output_sample in output_channel {
-                    if let Some(sample) = self.synth.next() {
+                    if let Some(sample) = self.synth.next_sample() {
                         *output_sample = sample;
                     }
+                }
+            }
+        } else {
+            for output_channel in output_buffer.into_iter() {
+                // Let's iterate over every sample in our channel.
+                for output_sample in output_channel {
+                    *output_sample = 0.0;
                 }
             }
         }
@@ -109,14 +128,35 @@ impl Plugin for SyntWave {
 
     fn set_sample_rate(&mut self, rate: f32) {
         self.sample_rate = rate;
-        todo!()
-        //self.synth = self.synth.with_sample_frequency(rate as u32);
+        self.synth = self.synth.set_sample_rate(rate);
     }
 }
 
 enum SynthType {
     Mono(MonoWave),
     Multi(SynthWave),
+}
+impl SynthType {
+    pub fn next_sample(&mut self) -> Option<f32> {
+        match self {
+            Self::Mono(mono) => mono.next(),
+            Self::Multi(multi) => multi.next(),
+        }
+    }
+
+    pub fn set_frequency(&mut self, frequency: f32) {
+        match self {
+            Self::Mono(mono) => mono.set_frequency(frequency),
+            Self::Multi(multi) => todo!(),
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, rate: f32) -> SynthType {
+        match self {
+            Self::Mono(mono) => Self::Mono(mono.clone().with_sample_frequency(rate as u32)),
+            Self::Multi(multi) => todo!(),
+        }
+    }
 }
 
 plugin_main!(SyntWave);

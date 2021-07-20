@@ -2,7 +2,7 @@ use crate::wave::*;
 use core::time::Duration;
 use rodio::Source;
 use std::f32::consts::PI;
-
+#[derive(Clone)]
 pub struct MonoWave {
     wave: Wave,
 
