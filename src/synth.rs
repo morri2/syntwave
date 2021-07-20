@@ -1,9 +1,12 @@
 use crate::wave::Wave;
 use core::time::Duration;
 use rodio::Source;
+use std::usize;
 
-pub struct SynthWave {
-    waves: Vec<WaveElement>,
+#[derive(Clone)]
+pub struct CompoundWave {
+    waves: Vec<Wave>,
+    wave_ops: Vec<WaveOperation>,
     volume: f32,
     volume_cap: f32,
     sample_frequency: u32,
@@ -11,11 +14,12 @@ pub struct SynthWave {
     sample_head: u32,
 }
 
-impl SynthWave {
+impl CompoundWave {
     pub fn new() -> Self {
         let sample_frequency = 48000;
         Self {
-            waves: Vec::with_capacity(3),
+            waves: Vec::with_capacity(5),
+            wave_ops: Vec::with_capacity(5),
 
             //volume settings
             volume: 1.0,
@@ -33,7 +37,7 @@ impl SynthWave {
         self
     }
 
-    pub fn waves(&self) -> usize {
+    pub fn wave_count(&self) -> usize {
         self.waves.len()
     }
 
@@ -62,34 +66,59 @@ impl SynthWave {
     }
 
     pub fn push_addative_wave(&mut self, wave: Wave) {
-        self.waves.push(WaveElement::Addative(wave));
+        self.waves.push(wave);
+        self.wave_ops.push(WaveOperation::Addative);
     }
 
     pub fn push_subtractive_wave(&mut self, wave: Wave) {
-        self.waves.push(WaveElement::Subtractive(wave));
+        self.waves.push(wave);
+        self.wave_ops.push(WaveOperation::Subtractive);
     }
 
     pub fn head_time(&self) -> f32 {
         self.sample_head as f32 * self.sample_dt
     }
-}
 
-impl Iterator for SynthWave {
-    type Item = f32;
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut synt = 0.0;
-        for wave_elem in &self.waves {
-            match wave_elem {
-                WaveElement::Addative(wave) => synt += wave.sample(self.head_time()),
-                WaveElement::Subtractive(wave) => synt -= wave.sample(self.head_time()),
-            }
-        }
-        self.sample_head += 1;
-        Some(self.amplify_sample(synt))
+    //wave edit
+    pub fn replace_wave(&mut self, wave: Wave,wave_index: usize) {
+        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        self.waves[wave_index] = wave;
+    }
+    pub fn frequency(&self, wave_index: usize) {
+        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        self.waves[wave_index].frequency();
+    }
+    pub fn set_frequency(&mut self, frequency: f32, wave_index: usize) {
+        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        self.waves[wave_index].set_frequency(frequency);
+    }
+    pub fn amplitude(&mut self, wave_index: usize) {
+        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        self.waves[wave_index].amplitude();
+    }
+    pub fn set_amplitude(&mut self, amplitude: f32, wave_index: usize) {
+        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        self.waves[wave_index].set_amplitude(amplitude);
     }
 }
 
-impl Source for SynthWave {
+impl Iterator for CompoundWave {
+    type Item = f32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut synt_sample = 0.0;
+        for i in 0..self.wave_count(){
+            match self.wave_ops[i] {
+                WaveOperation::Addative => synt_sample += self.waves[i].sample(self.head_time()),
+                WaveOperation::Subtractive => synt_sample -= self.waves[i].sample(self.head_time()),
+                _ => {},
+            }
+        }
+        self.sample_head += 1;
+        Some(self.amplify_sample(synt_sample))
+    }
+}
+
+impl Source for CompoundWave {
     fn current_frame_len(&self) -> Option<usize> {
         None
     }
@@ -104,9 +133,13 @@ impl Source for SynthWave {
     }
 }
 
-pub enum WaveElement {
-    Addative(Wave),
-    Subtractive(Wave),
+#[derive(Copy,Clone)]
+pub enum WaveOperation {
+    Addative,
+    Subtractive,
+    Mute,
 }
 
-impl WaveElement {}
+impl WaveOperation {
+
+}

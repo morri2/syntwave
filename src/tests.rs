@@ -12,18 +12,19 @@ fn synthwave() {
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
 
-    let mut synth = SynthWave::new();
+    let mut synth = CompoundWave::new();
 
-    synth.push_addative_wave(Wave::sine(440.0, 0.015));
+    synth.push_addative_wave(Wave::sine(440.0, 0.215));
     synth.push_addative_wave(Wave::sine(660.0, 0.015));
     synth.push_addative_wave(Wave::sine(550.0, 0.015));
     synth.push_addative_wave(Wave::saw(4.0, 0.045));
     synth.push_addative_wave(Wave::saw(1.0, 0.090));
     synth.push_addative_wave(Wave::saw(1.0, 0.045));
 
+    synth.set_frequency(880.0, 0);
     stream_handle.play_raw(synth);
 
-    std::thread::sleep(std::time::Duration::from_secs(7));
+    std::thread::sleep(std::time::Duration::from_secs(4));
 }
 
 #[test]
@@ -34,7 +35,9 @@ fn monowave() {
 
     let mut mono = MonoWave::new(Wave::sine(440.0, 0.115));
 
+    mono.set_frequency(880.0);
+
     stream_handle.play_raw(mono);
 
-    std::thread::sleep(std::time::Duration::from_secs(7));
+    std::thread::sleep(std::time::Duration::from_secs(4));
 }

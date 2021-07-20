@@ -3,7 +3,8 @@
 use core::time::Duration;
 use rodio::Source;
 use std::f32::consts::PI;
-#[derive(Clone)]
+
+#[derive(Clone, Copy)]
 pub struct Wave {
     amplitude: f32,
     frequency: f32,
