@@ -5,6 +5,7 @@ use core::time::Duration;
 pub struct WaveSynth {
     waves: Vec<WaveElement>,
     volume: f32,
+    volume_cap: f32,
     sample_frequency: u32,
 }
 
@@ -14,6 +15,7 @@ impl WaveSynth {
         Self {
             waves: Vec::with_capacity(3),
             volume: 1.0,
+            volume_cap: 3.0,
             sample_frequency: 48000,
         }
     }
@@ -28,6 +30,14 @@ impl WaveSynth {
 
     pub fn set_volume(&mut self, volume: f32) {
         self.volume = volume;
+    }
+
+    pub fn volume_cap(&self) -> f32 {
+        self.volume
+    }
+
+    pub fn set_volume_cap(&mut self, volume_cap: f32) {
+        self.volume_cap = volume_cap;
     }
 
     pub fn push_addative_wave(&mut self, wave: Wave) {
@@ -49,7 +59,7 @@ impl Iterator for WaveSynth {
                 WaveElement::Subtractive(wave) => synt += wave.next()?,
             }
         }
-        Some(synt * self.volume)
+        Some(f32::min(f32::max(synt * self.volume, -self.volume_cap), self.volume_cap))
     }
 }
 
@@ -63,4 +73,8 @@ impl Source for WaveSynth {
 pub enum WaveElement {
     Addative(Wave),
     Subtractive(Wave),
+}
+
+impl WaveElement {
+
 }
