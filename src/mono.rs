@@ -1,4 +1,4 @@
-use crate::wave::Wave;
+use crate::wave::*;
 use core::time::Duration;
 use rodio::Source;
 use std::f32::consts::PI;
@@ -65,6 +65,31 @@ impl MonoWave {
 
     pub fn head_time(&self) -> f32 {
         self.sample_head as f32 * self.sample_dt
+    }
+
+    // edit wave
+    pub fn waveform(&self) -> Waveform {
+        self.wave.waveform()
+    }
+
+    pub fn set_waveform(&mut self, waveform: Waveform) {
+        self.wave.set_waveform(waveform);
+    }
+
+    pub fn amplitude(&self) -> f32 {
+        self.wave.amplitude()
+    }
+
+    pub fn set_amplitude(&mut self, amplitude: f32) {
+        self.wave.set_amplitude(amplitude)
+    }
+
+    pub fn frequency(self) -> f32 {
+        self.wave.frequency()
+    }
+
+    pub fn set_frequency(&mut self, frequency: f32) {
+        self.wave.set_frequency(frequency)
     }
 }
 
