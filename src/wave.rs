@@ -43,6 +43,11 @@ impl Wave {
             t: 0,
         }
     }
+    
+    pub fn offset(mut self, offset: f32) -> Self { // offset in sec
+        self.t += (offset*(self.sample_frequency as f32)) as u32;
+        return self;
+    }
 
 }
 
