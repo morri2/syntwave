@@ -27,6 +27,11 @@ impl SynthWave {
             sample_head: 0,
         }
     }
+    pub fn with_sample_frequency(mut self, sample_frequency: u32) -> Self {
+        self.sample_frequency = sample_frequency;
+        self.sample_dt = 1f32 / (sample_frequency as f32);
+        self
+    }
 
     pub fn waves(&self) -> usize {
         self.waves.len()
