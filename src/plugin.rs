@@ -1,4 +1,4 @@
-use crate::{synth::WaveSynth, wave::Wave};
+use crate::{synth::SynthWave, wave::Wave};
 use rand::random;
 use std::thread::current;
 use vst::{
@@ -9,7 +9,7 @@ use vst::{
 //#[derive(Default)]
 struct SyntWave {
     current_note: Option<u8>,
-    synth: WaveSynth,
+    synth: SynthWave,
     sample_rate: f32,
 }
 
@@ -18,11 +18,11 @@ impl Default for SyntWave {
         Self {
             current_note: None,
             synth: {
-                let mut synth = WaveSynth::new();
-                synth.push_addative_wave(Wave::sine(880.0, 0.1));
+                let mut synth = SynthWave::new();
+                synth.push_addative_wave(Wave::sine(440.0, 0.1));
                 synth
             },
-            sample_rate: 48000.,
+            sample_rate: 44100.,
         }
     }
 }
@@ -66,7 +66,7 @@ impl Plugin for SyntWave {
 
                         // if note off, decrement our counter
                         128 => self.current_note = None,
-                        _ => (),
+                        _ => self.current_note = None,
                     }
                     // if we cared about the pitch of the note, it's stored in `ev.data[1]`.
                 }
