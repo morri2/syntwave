@@ -1,3 +1,4 @@
+pub mod effect;
 pub mod mono;
 pub mod plugin;
 pub mod synth;
