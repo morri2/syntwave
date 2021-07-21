@@ -80,24 +80,34 @@ impl CompoundWave {
     }
 
     //wave edit
-    pub fn replace_wave(&mut self, wave: Wave,wave_index: usize) {
-        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+    pub fn replace_wave(&mut self, wave: Wave, wave_index: usize) {
+        if wave_index >= self.wave_count() {
+            panic!("wave_index oob!")
+        }
         self.waves[wave_index] = wave;
     }
     pub fn frequency(&self, wave_index: usize) {
-        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        if wave_index >= self.wave_count() {
+            panic!("wave_index oob!")
+        }
         self.waves[wave_index].frequency();
     }
     pub fn set_frequency(&mut self, frequency: f32, wave_index: usize) {
-        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        if wave_index >= self.wave_count() {
+            panic!("wave_index oob!")
+        }
         self.waves[wave_index].set_frequency(frequency);
     }
     pub fn amplitude(&mut self, wave_index: usize) {
-        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        if wave_index >= self.wave_count() {
+            panic!("wave_index oob!")
+        }
         self.waves[wave_index].amplitude();
     }
     pub fn set_amplitude(&mut self, amplitude: f32, wave_index: usize) {
-        if wave_index >= self.wave_count() {panic!("wave_index oob!")}
+        if wave_index >= self.wave_count() {
+            panic!("wave_index oob!")
+        }
         self.waves[wave_index].set_amplitude(amplitude);
     }
 }
@@ -106,11 +116,11 @@ impl Iterator for CompoundWave {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
         let mut synt_sample = 0.0;
-        for i in 0..self.wave_count(){
+        for i in 0..self.wave_count() {
             match self.wave_ops[i] {
                 WaveOperation::Addative => synt_sample += self.waves[i].sample(self.head_time()),
                 WaveOperation::Subtractive => synt_sample -= self.waves[i].sample(self.head_time()),
-                _ => {},
+                _ => {}
             }
         }
         self.sample_head += 1;
@@ -133,13 +143,11 @@ impl Source for CompoundWave {
     }
 }
 
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 pub enum WaveOperation {
     Addative,
     Subtractive,
     Mute,
 }
 
-impl WaveOperation {
-
-}
+impl WaveOperation {}
