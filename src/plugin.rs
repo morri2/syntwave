@@ -1,4 +1,4 @@
-use crate::{mono::MonoWave, synth::CompoundWave, wave::Wave};
+use crate::{effect::ADSR, mono::MonoWave, synth::CompoundWave, wave::Wave};
 use rand::random;
 use std::thread::current;
 use vst::{
@@ -18,22 +18,38 @@ fn midi_pitch_to_freq(pitch: u8) -> f32 {
     ((f32::from(pitch as i8 - A4_PITCH)) / 12.).exp2() * A4_FREQ
 }
 
-//#[derive(Default)]
 struct SyntWave {
     current_note: Option<u8>,
+    note_on: bool,
     synth: SynthType,
     sample_rate: f32,
+    envelope: ADSR,
+}
+
+impl SyntWave {
+    fn note_on(&mut self, note: u8) {
+        self.note_on = true;
+        self.current_note = Some(note);
+        self.envelope.key_press();
+    }
+
+    fn note_off(&mut self) {
+        self.note_on = false;
+        self.envelope.key_release();
+    }
 }
 
 impl Default for SyntWave {
     fn default() -> Self {
         Self {
             current_note: None,
+            note_on: false,
             synth: {
-                let mut synth = MonoWave::new(Wave::saw(440.0, 0.1)).with_sample_frequency(44100);
+                let synth = MonoWave::new(Wave::sine(440.0, 0.1)).with_sample_frequency(44100);
                 SynthType::Mono(synth)
             },
             sample_rate: 44100.,
+            envelope: ADSR::default(),
         }
     }
 }
@@ -73,11 +89,11 @@ impl Plugin for SyntWave {
                     // https://www.midi.org/specifications/item/table-1-summary-of-midi-message
                     match ev.data[0] {
                         // if note on, increment our counter
-                        144 => self.current_note = Some(ev.data[1]),
+                        144 => self.note_on(ev.data[1]),
 
                         // if note off, decrement our counter
-                        128 => self.current_note = None,
-                        _ => self.current_note = None,
+                        128 => self.note_off(),
+                        _ => self.note_off(),
                     }
                     // if we cared about the pitch of the note, it's stored in `ev.data[1]`.
                 }
@@ -88,21 +104,19 @@ impl Plugin for SyntWave {
     }
     /// Where the audio is proccesed, i.e the "make sound" function
     fn process(&mut self, buffer: &mut vst::buffer::AudioBuffer<f32>) {
-
         let samples = buffer.samples();
         let (_, mut outputs) = buffer.split();
         let output_count = outputs.len();
         let mut output_sample = 0.0; // Default of 0.0 (no sound)
 
         for sample_index in 0..samples {
-
             if let Some(pitch) = self.current_note {
-                // Note played
                 self.synth.set_frequency(midi_pitch_to_freq(pitch));
                 if let Some(sample) = self.synth.next_sample() {
-                    output_sample = sample;
-                } 
-                
+                    // Apply envelope
+                    output_sample = self.envelope.envelope_signal(sample);
+                    self.envelope.increment_time(1.0 / self.sample_rate);
+                }
             } else {
                 // No note played
                 output_sample = 0.0;
@@ -113,7 +127,6 @@ impl Plugin for SyntWave {
                 buff[sample_index] = output_sample;
             }
         }
-        
     }
     // Tells the host what the plugin supports
     fn can_do(&self, can_do: CanDo) -> Supported {

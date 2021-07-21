@@ -53,10 +53,13 @@ impl ADSR {
                 // Sustain
                 self.sustain
             }
-        } else {
+        } else if self.time < self.release {
             // Release
             // Assume time = time since release of key
             self.sustain - (self.sustain / self.release) * self.time
+        } else {
+            // No sound should be played
+            0.0f32
         };
         return signal * alpha;
     }
@@ -98,5 +101,37 @@ fn envelope_signal_less_than_or_equal_one() {
         }
         adsr.increment_time(time_per_sample);
     }
+    adsr.key_release();
+    for sample in 0..samples {
+        let signal = (random::<f32>() - 0.5f32) * 2f32;
+        let processed = adsr.envelope_signal(signal);
+        //string_buf.push_str(&signal.to_string());
+        //string_buf.push('\n');
+        if processed.abs() > 1.0 {
+            println!(
+                "Signal {} had a value of {}, which became {} after processing",
+                sample, signal, processed
+            );
+            panic!()
+        }
+        adsr.increment_time(time_per_sample);
+    }
     //print!("{}", string_buf);
+}
+
+#[test]
+fn release_smaller_than_sustain() {
+    let mut adsr = ADSR::default();
+    let samples: u32 = 41400;
+    let time_per_sample = 1.0 / (samples as f32);
+    let signal_1 = (random::<f32>() - 0.5f32) * 2f32;
+    let processed_1 = adsr.envelope_signal(signal_1);
+    adsr.increment_time(time_per_sample);
+    adsr.increment_time(time_per_sample);
+    adsr.increment_time(time_per_sample);
+    println!("{}", time_per_sample);
+    let processed_2 = adsr.envelope_signal(signal_1);
+    if processed_2.abs() > processed_1.abs() {
+        panic!()
+    }
 }
