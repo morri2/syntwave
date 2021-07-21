@@ -86,37 +86,34 @@ impl Plugin for SyntWave {
             }
         }
     }
-
+    /// Where the audio is proccesed, i.e the "make sound" function
     fn process(&mut self, buffer: &mut vst::buffer::AudioBuffer<f32>) {
-        // We only want to process *anything* if a note is
-        // being held.  Else, we can return early and skip
-        // processing anything!
-        let (_, mut output_buffer) = buffer.split();
-        if let Some(pitch) = self.current_note {
-            self.synth.set_frequency(midi_pitch_to_freq(pitch));
-            // `buffer.split()` gives us a tuple containing the
-            // input and output buffers.  We only care about the
-            // output, so we can ignore the input by using `_`.
 
-            // Now, we want to loop over our output channels.  This
-            // includes our left and right channels (or more, if you
-            // are working with surround sound).
-            for output_channel in output_buffer.into_iter() {
-                // Let's iterate over every sample in our channel.
-                for output_sample in output_channel {
-                    if let Some(sample) = self.synth.next_sample() {
-                        *output_sample = sample;
-                    }
-                }
+        let samples = buffer.samples();
+        let (_, mut outputs) = buffer.split();
+        let output_count = outputs.len();
+        let mut output_sample = 0.0; // Default of 0.0 (no sound)
+
+        for sample_index in 0..samples {
+
+            if let Some(pitch) = self.current_note {
+                // Note played
+                self.synth.set_frequency(midi_pitch_to_freq(pitch));
+                if let Some(sample) = self.synth.next_sample() {
+                    output_sample = sample;
+                } 
+                
+            } else {
+                // No note played
+                output_sample = 0.0;
             }
-        } else {
-            for output_channel in output_buffer.into_iter() {
-                // Let's iterate over every sample in our channel.
-                for output_sample in output_channel {
-                    *output_sample = 0.0;
-                }
+
+            for buffer_index in 0..output_count {
+                let buff = outputs.get_mut(buffer_index);
+                buff[sample_index] = output_sample;
             }
         }
+        
     }
     // Tells the host what the plugin supports
     fn can_do(&self, can_do: CanDo) -> Supported {
